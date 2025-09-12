@@ -1,0 +1,82 @@
+以下は、**現行ドキュメントに整合**しつつ、短時間開発・CI/CD・MVP 3 API（today/submit/dashboard）前提で**AIがそのまま読めるディレクトリツリー**です。
+（`frontend/`・`docs/`・`.github/` という上位構成、CI 手順、Vercel プレビュー/本番の流れに準拠）  &#x20;
+（MVP最小API: `GET /api/today`, `POST /api/submit`, `GET /api/dashboard`）  &#x20;
+
+```text
+repo-root/
+├─ frontend/                           # WebとAPIを同居（初期は最小配線で安定）
+│  ├─ web/                             # 画面層（Next.js）
+│  │  ├─ app/                          # App Router（/today, /submit, /dashboard）
+│  │  │  ├─ today/page.tsx
+│  │  │  ├─ submit/page.tsx
+│  │  │  ├─ dashboard/page.tsx
+│  │  │  └─ layout.tsx
+│  │  ├─ components/                   # UIコンポーネント
+│  │  ├─ lib/                          # フロント用ユーティリティ
+│  │  ├─ styles/                       # グローバルCSS等
+│  │  └─ i18n/ja.json                  # 文言（任意）
+│  │
+│  └─ api/                             # API層（最小3本 + フォールバック）
+│     ├─ routes/
+│     │  ├─ today.ts                   # GET /api/today
+│     │  ├─ submit.ts                  # POST /api/submit
+│     │  └─ dashboard.ts               # GET /api/dashboard
+│     ├─ middleware/
+│     │  ├─ validate.ts                # 入力バリデーション
+│     │  └─ error-shape.ts             # 共通エラーフォーマット { ok:false, error:{...} }
+│     ├─ services/                     # ルールベースの仮実装（MVP向け）
+│     ├─ types/                        # API I/O型定義（SSOTに準拠）
+│     ├─ mock/
+│     │  ├─ fixtures.json              # モックデータ
+│     │  └─ toggle.ts                  # ?mock=1 切替ヘルパ
+│     └─ index.ts                      # ルーティング集約（必要な場合のみ）
+│
+├─ docs/                               # SSOT/設計/運用
+│  ├─ ARCHITECTURE.md                  # 画面フロー & API入出力 & 用語（唯一の正）
+│  ├─ CODING_RULES.md                  # 命名/レスポンス形/収集最小主義
+│  ├─ ENV_SETUP.md                     # Node18 / npm ci / lint→type→build→test
+│  └─ OPS_RULES.md                     # main保護/PR必須/小PR主義/同期手順
+│
+├─ tests/                              # 最小テスト3本（E2E風を含む）
+│  ├─ e2e/
+│  │  └─ core.spec.ts                  # /today→/submit→/dashboard（30秒体験）
+│  └─ api/
+│     ├─ fallback.spec.ts              # API停止→キャッシュ→モック切替
+│     └─ io-contract.spec.ts           # SSOTとI/Oの整合チェック
+│
+├─ .github/
+│  ├─ workflows/
+│  │  └─ ci.yml                        # Node18 → npm ci → lint → type-check → build → test
+│  ├─ PULL_REQUEST_TEMPLATE.md         # 変更/理由/技術詳細/テスト + チェックリスト
+│  └─ ISSUE_TEMPLATE.md
+│
+├─ .nvmrc                               # 18
+├─ package.json                         # scripts: dev:web / dev:api / lint / type-check / build / test
+├─ tsconfig.json
+├─ .eslintrc.cjs
+├─ .prettierrc
+├─ .env.example                         # 実鍵なし（OPENAI_*, SUPABASE_*, etc.）
+└─ README.md                            # 起動2行 / デモURL / 制約とMVPスコープ
+```
+
+### 代替（将来の分離を見越す場合のみ・初期導入は非推奨）
+
+> APIを独立運用したくなった段階で移行。CIを2ジョブ化・SecretsもAPI側に追加。
+
+```text
+repo-root/
+├─ frontend/ ...                       # 上と同様（フロントのみ）
+├─ api/ ...                            # 上の frontend/api をトップへ昇格
+├─ docs/ ...
+└─ .github/workflows/
+   ├─ ci-frontend.yml                  # Frontend: lint/type/build/test → Vercel preview/prod
+   └─ ci-api.yml                       # API:    lint/type/build/test → デプロイ
+```
+
+#### 根拠（整合性）
+
+* **上位3本柱**：`frontend/`・`docs/`・`.github/` の採用は現行記載に一致。&#x20;
+* **CI手順**：Node 18 / `npm ci → lint → type-check → build → test` に従い、PRでプレビュー、`main`で本番。 &#x20;
+* **MVP最小API 3本**：today / submit / dashboard の入出力定義に準拠。  &#x20;
+
+> このテンプレは、**現在のドキュメントと運用前提に矛盾せず**、初期の配線コストを最小化しつつ、将来の分離にも移行しやすい構成です。
