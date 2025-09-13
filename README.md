@@ -11,9 +11,23 @@
 
 ## 🌐 **即座にアクセス可能**
 
-### **本番デプロイ（推奨）**
+### **ローカルホストデモ（Windows/MacBook両対応）**
+
+**Windows:**
 ```
-https://steppy-hackathon-2025.vercel.app
+start-demo.bat をダブルクリック
+```
+
+**MacBook:**
+```bash
+cd hackathon-2025
+chmod +x start-demo.sh
+./start-demo.sh
+```
+
+**アクセスURL:**
+```
+http://localhost:8080
 ```
 
 ### **GitHubリポジトリ**
@@ -25,7 +39,7 @@ https://github.com/0nyx-lab/aidd-integration-system
 
 ## ⚡ **30秒で体験**
 
-1. **URLにアクセス** → https://steppy-hackathon-2025.vercel.app
+1. **URLにアクセス** → http://localhost:8080
 2. **タスクカードを確認** → カテゴリ・タイトル・説明を確認
 3. **「✓ 完了する」をクリック** → 完了アニメーションを確認
 4. **新しいタスクを確認** → AI推薦エンジンの動作を確認
@@ -190,6 +204,8 @@ hackathon-2025/
 - [プレゼンテーション資料](PRESENTATION_SUMMARY.md)
 
 ### **審査員・ユーザー向け**
+- [ローカルホストデモ完全ガイド](LOCALHOST_DEMO_GUIDE.md)
+- [手元PCデモ・共有フロー](LOCAL_DEMO_SHARING_GUIDE.md)
 - [審査員向けデモガイド](DEMO_GUIDE_FOR_JUDGES.md)
 - [ユーザーアクセスガイド](USER_ACCESS_GUIDE.md)
 - [審査員向けクイックアクセス](JUDGE_QUICK_ACCESS.md)
