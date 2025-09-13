@@ -6,6 +6,9 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ErrorDisplay } from '@/components/ErrorDisplay'
 import { useTask } from '@/hooks/useTask'
+import { ProgressWidget } from '@/components/ProgressWidget'
+import { HistoryList } from '@/components/HistoryList'
+import { CategoryPreferences } from '@/components/CategoryPreferences'
 
 export default function Home() {
   const {
@@ -14,8 +17,14 @@ export default function Home() {
     error,
     fetchTodayTask,
     handleTaskSelect,
-    handleTaskComplete
+    handleTaskComplete: handleTaskCompleteHook,
+    generateNewTask
   } = useTask()
+
+  // 型を合わせるためのラッパー関数
+  const handleTaskComplete = (taskId: string, duration: number, result: any) => {
+    handleTaskCompleteHook(taskId, duration, result)
+  }
 
   useEffect(() => {
     fetchTodayTask()
@@ -51,6 +60,16 @@ export default function Home() {
             </p>
           </header>
 
+          {/* 進捗ウィジェット */}
+          <div className="max-w-3xl mx-auto mb-8">
+            <ProgressWidget />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto mb-8">
+            <CategoryPreferences />
+            <HistoryList />
+          </div>
+
           {/* タスクカード */}
           {task && (
             <div className="max-w-lg mx-auto">
@@ -59,6 +78,11 @@ export default function Home() {
                 onSelect={handleTaskSelect}
                 onComplete={handleTaskComplete}
               />
+              <div className="mt-4 text-center">
+                <button onClick={generateNewTask} className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800">
+                  次のタスクを表示
+                </button>
+              </div>
             </div>
           )}
 

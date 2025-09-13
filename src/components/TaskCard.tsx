@@ -2,6 +2,7 @@
 
 import { useState, useEffect, memo, useMemo, useCallback } from 'react'
 import { Task } from '@/types'
+import { taskCategories } from '@/data/tasks'
 
 interface TaskCardProps {
   task: Task
@@ -14,17 +15,21 @@ function TaskCardComponent({ task, onSelect, onComplete }: TaskCardProps) {
   const [timeLeft, setTimeLeft] = useState(task.estimated_seconds || 60)
 
   const categoryColors = useMemo(() => ({
-    '学習': 'bg-blue-500',
-    '仕事': 'bg-green-500',
-    '生活': 'bg-orange-500',
-    '健康': 'bg-red-500'
+    'health': 'bg-green-500',
+    'learning': 'bg-blue-500',
+    'productivity': 'bg-yellow-500',
+    'relationship': 'bg-pink-500',
+    'creativity': 'bg-purple-500',
+    'mindfulness': 'bg-indigo-500'
   }), [])
 
   const categoryIcons = useMemo(() => ({
-    '学習': '📚',
-    '仕事': '💼',
-    '生活': '🏠',
-    '健康': '💪'
+    'health': '💪',
+    'learning': '📚',
+    'productivity': '⚡',
+    'relationship': '🤝',
+    'creativity': '🎨',
+    'mindfulness': '🧘'
   }), [])
 
   const handleStart = useCallback(() => {
@@ -82,7 +87,9 @@ function TaskCardComponent({ task, onSelect, onComplete }: TaskCardProps) {
             <span className="text-white text-lg">
               {categoryIcons[task.category as keyof typeof categoryIcons] || '📝'}
             </span>
-            <span className="text-white font-medium">{task.category}</span>
+            <span className="text-white font-medium">
+              {taskCategories.find(cat => cat.id === task.category)?.name || task.category}
+            </span>
           </div>
           <div className="text-white text-sm">
             {task.estimated_seconds}秒
