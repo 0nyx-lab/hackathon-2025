@@ -26,6 +26,7 @@ Issue作成 → Plan → Do → Check → Act → Issue更新 → 知識蓄積
 - ✅ 前提条件・制約事項・依存関係を記載
 - ✅ SubChat起動指示をIssue本文に埋め込み
 - ✅ 着手条件(DoR)をチェックリスト化
+ - ✅ 担当（AIサービス/モデル/端末）を明記（例: Cursor × GPT-5／SubPC(Mac)）
 
 ### 3. Do（実行）フェーズ
 **SubChat/ClaudeCodeの作業:**
@@ -33,6 +34,7 @@ Issue作成 → Plan → Do → Check → Act → Issue更新 → 知識蓄積
 - ✅ 段階ごとにコメントで進捗報告
 - ✅ ログ・出力・スクリーンショットを共有
 - ✅ 危険操作は事前確認
+ - ✅ PIMS気づきは都度メモ化→knowledge.mdcへ反映
 
 ### 4. Check（検証）フェーズ
 **統括役の作業:**
@@ -46,6 +48,7 @@ Issue作成 → Plan → Do → Check → Act → Issue更新 → 知識蓄積
 - ✅ `knowledge.mdc`への知識蓄積
 - ✅ 必要に応じて派生Issue作成
 - ✅ DoD充足確認後Issueクローズ
+ - ✅ 担当履歴（サービス/モデル/端末）を最終記録
 
 ## 📝 テンプレート詳細
 
@@ -91,6 +94,12 @@ Issue作成 → Plan → Do → Check → Act → Issue更新 → 知識蓄積
 - TypeScript型エラー0件
 - 既存機能破壊禁止
 - API依存なし（ローカルストレージ使用）
+ - 記録主義：担当（AIサービス/モデル/端末）・証跡URLを必須化
+
+### GitHub活用（PIMSの器）
+- 同期性: サブPC/別拠点から同一Issueで継続可能
+- 既存機能: PR/Review/Checks/Projects/DiscussionsをEvidence・Decisionに活用
+- 初心者配慮: ガイドへの動線（リンク）と用語補足をIssue本文に常設
 
 ## 📊 報告形式
 
