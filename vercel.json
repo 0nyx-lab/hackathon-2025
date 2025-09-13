@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "name": "steppy-hackathon-emergency",
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  }
+}
