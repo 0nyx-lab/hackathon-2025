@@ -7,6 +7,8 @@ import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { ErrorDisplay } from '@/components/ErrorDisplay'
 import { useTask } from '@/hooks/useTask'
 import { ProgressWidget } from '@/components/ProgressWidget'
+import { HistoryList } from '@/components/HistoryList'
+import { CategoryPreferences } from '@/components/CategoryPreferences'
 
 export default function Home() {
   const {
@@ -61,6 +63,11 @@ export default function Home() {
           {/* 進捗ウィジェット */}
           <div className="max-w-3xl mx-auto mb-8">
             <ProgressWidget />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto mb-8">
+            <CategoryPreferences />
+            <HistoryList />
           </div>
 
           {/* タスクカード */}

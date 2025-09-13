@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { Task } from '@/types'
 import { getRandomTask, taskPool } from '@/data/tasks'
 import { useProgress } from './useProgress'
+import { useLocalStorage } from './useStorage'
 
 export interface UseTaskState {
   task: Task | null
@@ -26,19 +27,28 @@ export function useTask(): UseTaskState & UseTaskActions {
   const [error, setError] = useState<string | null>(null)
   const [completedTasks, setCompletedTasks] = useState<string[]>([])
   const [currentTaskStartTime, setCurrentTaskStartTime] = useState<number | null>(null)
+  const [prefs] = useLocalStorage<Record<string, boolean>>('steppy_category_prefs', {})
 
   const { recordTaskCompletion } = useProgress()
 
   const getNextTask = useCallback((): Task => {
     // 今日完了していないタスクを優先的に選択
-    const availableTasks = taskPool.filter(t => !completedTasks.includes(t.id))
+    let availableTasks = taskPool.filter(t => !completedTasks.includes(t.id))
+
+    // ユーザーのカテゴリ嗜好を優先
+    const preferredIds = Object.entries(prefs).filter(([, v]) => v).map(([k]) => k)
+    if (preferredIds.length > 0) {
+      const preferred = availableTasks.filter(t => preferredIds.includes(t.category))
+      if (preferred.length > 0) {
+        availableTasks = preferred
+      }
+    }
 
     if (availableTasks.length === 0) {
-      // すべてのタスクが完了済みの場合は、ランダムに選択
       return getRandomTask()
     }
 
-    // カテゴリバランスを考慮した選択
+    // 以降はカテゴリバランス選択
     const categoryCount: Record<string, number> = {}
     completedTasks.forEach(taskId => {
       const task = taskPool.find(t => t.id === taskId)
@@ -47,7 +57,6 @@ export function useTask(): UseTaskState & UseTaskActions {
       }
     })
 
-    // 最も少ないカテゴリのタスクを優先
     const categoryCounts = Object.entries(categoryCount)
     if (categoryCounts.length > 0) {
       const minCount = Math.min(...categoryCounts.map(([, count]) => count))
@@ -65,10 +74,9 @@ export function useTask(): UseTaskState & UseTaskActions {
       }
     }
 
-    // フォールバック: ランダム選択
     const randomIndex = Math.floor(Math.random() * availableTasks.length)
     return availableTasks[randomIndex]
-  }, [completedTasks])
+  }, [completedTasks, prefs])
 
   const generateNewTask = useCallback(() => {
     setLoading(true)
