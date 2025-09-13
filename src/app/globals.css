@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* カスタムスタイル */
+@layer base {
+  html {
+    font-family: system-ui, sans-serif;
+  }
+  
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  /* カードホバーエフェクト */
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+  
+  /* ボタンベース */
+  .btn-primary {
+    @apply bg-blue-500 text-white font-medium py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors;
+  }
+  
+  /* プログレスバー */
+  .progress-bar {
+    @apply w-full bg-gray-200 rounded-full h-2 overflow-hidden;
+  }
+  
+  .progress-fill {
+    @apply bg-blue-500 h-full rounded-full transition-all duration-300;
+  }
+}
+
+@layer utilities {
+  /* スクロールバー非表示 */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* タッチアクション */
+  .touch-none {
+    touch-action: none;
+  }
+  
+  /* セーフエリア対応 */
+  .safe-area-inset {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* アニメーション */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* モバイル最適化 */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* タップ域を確保 */
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* ダークモード対応（将来実装） */
+@media (prefers-color-scheme: dark) {
+  /* ダークモードスタイルは将来実装 */
+}
