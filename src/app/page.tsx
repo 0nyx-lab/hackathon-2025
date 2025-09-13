@@ -1,28 +1,36 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { TodayResponse, TodayTask } from '@/types'
+
+interface Task {
+  id: string
+  category: string
+  title: string
+  description: string
+  estimatedTime: number
+  source: string
+}
 
 export default function Home() {
-  const [todayData, setTodayData] = useState<TodayResponse | null>(null)
+  const [task, setTask] = useState<Task | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchTodayTasks()
+    fetchTodayTask()
   }, [])
 
-  const fetchTodayTasks = async () => {
+  const fetchTodayTask = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/today?user_id=demo_user_001')
+      const response = await fetch('/api/today')
       
       if (!response.ok) {
         throw new Error('API request failed')
       }
       
-      const data: TodayResponse = await response.json()
-      setTodayData(data)
+      const data = await response.json()
+      setTask(data.task)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
@@ -32,25 +40,24 @@ export default function Home() {
 
   const handleTaskSubmit = async (taskId: string, completed: boolean) => {
     try {
-      const response = await fetch('/api/submit?user_id=demo_user_001', {
+      const startTime = Date.now() - 60000 // 1分前に開始したと仮定
+      const endTime = Date.now()
+      
+      const response = await fetch('/api/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          task_id: taskId,
-          duration_seconds: 60,
-          result: {
-            completed,
-            confidence: completed ? 'high' : 'low'
-          },
-          timestamp: new Date().toISOString()
+          taskId,
+          startTime,
+          endTime
         })
       })
 
       if (response.ok) {
-        // タスク完了後、今日のタスクを再取得
-        fetchTodayTasks()
+        // タスク完了後、新しいタスクを取得
+        fetchTodayTask()
       }
     } catch (err) {
       console.error('Task submission failed:', err)
@@ -76,7 +83,7 @@ export default function Home() {
           <h1 className="text-2xl font-bold text-gray-800 mb-2">エラーが発生しました</h1>
           <p className="text-gray-600 mb-4">{error}</p>
           <button 
-            onClick={fetchTodayTasks}
+            onClick={fetchTodayTask}
             className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
           >
             再試行
@@ -99,30 +106,15 @@ export default function Home() {
           </p>
         </header>
 
-        {/* 推薦メッセージ */}
-        {todayData?.recommendations && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                今日の推薦: {todayData.recommendations.primary}
-              </h2>
-              <p className="text-gray-600">
-                {todayData.recommendations.balance_suggestion}
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* タスクカード */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {todayData?.cards.map((task) => (
+        {task && (
+          <div className="max-w-lg mx-auto">
             <TaskCard 
-              key={task.id} 
               task={task} 
               onSubmit={handleTaskSubmit}
             />
-          ))}
-        </div>
+          </div>
+        )}
 
         {/* フッター */}
         <footer className="text-center mt-12 text-gray-500">
@@ -134,7 +126,7 @@ export default function Home() {
 }
 
 interface TaskCardProps {
-  task: TodayTask
+  task: Task
   onSubmit: (taskId: string, completed: boolean) => void
 }
 
@@ -156,20 +148,23 @@ function TaskCard({ task, onSubmit }: TaskCardProps) {
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case '学習': return 'bg-blue-100 text-blue-800'
-      case '仕事': return 'bg-green-100 text-green-800'
-      case '健康': return 'bg-red-100 text-red-800'
-      case '生活': return 'bg-purple-100 text-purple-800'
+      case 'health': return 'bg-red-100 text-red-800'
+      case 'learning': return 'bg-blue-100 text-blue-800'
+      case 'productivity': return 'bg-green-100 text-green-800'
+      case 'relationships': return 'bg-purple-100 text-purple-800'
+      case 'creativity': return 'bg-yellow-100 text-yellow-800'
       default: return 'bg-gray-100 text-gray-800'
     }
   }
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'text-green-600'
-      case 'medium': return 'text-yellow-600'
-      case 'hard': return 'text-red-600'
-      default: return 'text-gray-600'
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case 'health': return '健康'
+      case 'learning': return '学習'
+      case 'productivity': return '生産性'
+      case 'relationships': return '人間関係'
+      case 'creativity': return '創造性'
+      default: return category
     }
   }
 
@@ -191,10 +186,10 @@ function TaskCard({ task, onSubmit }: TaskCardProps) {
     <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
       <div className="flex items-center justify-between mb-4">
         <span className={`px-3 py-1 rounded-full text-sm font-medium ${getCategoryColor(task.category)}`}>
-          {task.category}
+          {getCategoryLabel(task.category)}
         </span>
-        <span className={`text-sm font-medium ${getDifficultyColor(task.difficulty)}`}>
-          {task.difficulty === 'easy' ? '簡単' : task.difficulty === 'medium' ? '普通' : '難しい'}
+        <span className="text-sm text-gray-500">
+          ⏱️ {task.estimatedTime}分
         </span>
       </div>
 
@@ -202,28 +197,17 @@ function TaskCard({ task, onSubmit }: TaskCardProps) {
         {task.title}
       </h3>
 
-      <p className="text-gray-600 mb-4">
+      <p className="text-gray-600 mb-6">
         {task.description}
       </p>
 
-      {task.content && (
-        <div className="bg-gray-50 rounded-lg p-4 mb-4">
-          <p className="text-sm text-gray-700">
-            <strong>内容:</strong> {task.content}
-          </p>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-500">
-          ⏱️ {task.estimated_seconds}秒
-        </span>
+      <div className="text-center">
         <button
           onClick={handleComplete}
           disabled={isSubmitting}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
         >
-          {isSubmitting ? '完了中...' : '完了する'}
+          {isSubmitting ? '完了中...' : '✓ 完了する'}
         </button>
       </div>
     </div>

@@ -1,10 +1,24 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DashboardData } from '@/types'
+
+interface DashboardStats {
+  totalTasks: number
+  completedToday: number
+  currentStreak: number
+  totalPoints: number
+  categories: Record<string, { completed: number; total: number }>
+  recentActivities: Array<{
+    id: string
+    title: string
+    category: string
+    completedAt: string
+    points: number
+  }>
+}
 
 export default function Dashboard() {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  const [dashboardData, setDashboardData] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -15,14 +29,14 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/dashboard?user_id=demo_user_001')
+      const response = await fetch('/api/dashboard')
       
       if (!response.ok) {
         throw new Error('API request failed')
       }
       
-      const data: DashboardData = await response.json()
-      setDashboardData(data)
+      const result = await response.json()
+      setDashboardData(result.data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
@@ -85,77 +99,94 @@ export default function Dashboard() {
         </header>
 
         {/* 今日のサマリー */}
-        <div className="grid gap-6 md:grid-cols-3 mb-8">
+        <div className="grid gap-6 md:grid-cols-4 mb-8">
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-indigo-600 mb-2">
-                {dashboardData.daily_summary.total_minutes}
+                {dashboardData.totalTasks}
               </div>
-              <p className="text-gray-600">今日の合計時間（分）</p>
+              <p className="text-gray-600">総タスク数</p>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-green-600 mb-2">
-                {dashboardData.daily_summary.categories_active.length}
+                {dashboardData.completedToday}
               </div>
-              <p className="text-gray-600">アクティブカテゴリ</p>
+              <p className="text-gray-600">今日完了</p>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-orange-600 mb-2">
-                {dashboardData.daily_summary.streak_days}
+                {dashboardData.currentStreak}
               </div>
               <p className="text-gray-600">継続日数</p>
             </div>
           </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-600 mb-2">
+                {dashboardData.totalPoints}
+              </div>
+              <p className="text-gray-600">総ポイント</p>
+            </div>
+          </div>
         </div>
 
-        {/* 週間トレンド */}
+        {/* カテゴリ別進捗 */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">週間トレンド</h2>
-          <div className="grid grid-cols-7 gap-2">
-            {dashboardData.weekly_trend.map((day, index) => (
-              <div key={index} className="text-center">
-                <div className="text-xs text-gray-500 mb-2">
-                  {new Date(day.date).getMonth() + 1}/{new Date(day.date).getDate()}
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">カテゴリ別進捗</h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {Object.entries(dashboardData.categories).map(([category, stats]) => (
+              <div key={category} className="p-4 border rounded-lg">
+                <h3 className="font-semibold text-gray-800 mb-2">
+                  {category === 'health' ? '健康' : 
+                   category === 'learning' ? '学習' :
+                   category === 'productivity' ? '生産性' :
+                   category === 'relationships' ? '人間関係' :
+                   category === 'creativity' ? '創造性' : category}
+                </h3>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">
+                    {stats.completed}/{stats.total} 完了
+                  </span>
+                  <span className="text-sm font-medium text-indigo-600">
+                    {Math.round((stats.completed / stats.total) * 100)}%
+                  </span>
                 </div>
-                <div 
-                  className="bg-indigo-200 rounded"
-                  style={{ height: `${Math.max(day.minutes * 4, 8)}px` }}
-                ></div>
-                <div className="text-xs text-gray-600 mt-1">
-                  {day.minutes}分
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div 
+                    className="bg-indigo-600 h-2 rounded-full" 
+                    style={{ width: `${(stats.completed / stats.total) * 100}%` }}
+                  ></div>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* バッジ */}
+        {/* 最近の活動 */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">獲得バッジ</h2>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl mb-2">🔥</div>
-              <h3 className="font-semibold text-gray-800">継続力</h3>
-              <p className="text-sm text-gray-600">レベル {dashboardData.badges.continuity}</p>
-            </div>
-
-            <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl mb-2">⚡</div>
-              <h3 className="font-semibold text-gray-800">挑戦性</h3>
-              <p className="text-sm text-gray-600">レベル {dashboardData.badges.challenge}</p>
-            </div>
-
-            <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl mb-2">⚖️</div>
-              <h3 className="font-semibold text-gray-800">バランス力</h3>
-              <p className="text-sm text-gray-600">レベル {dashboardData.badges.balance}</p>
-            </div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">最近の活動</h2>
+          <div className="space-y-4">
+            {dashboardData.recentActivities.map((activity) => (
+              <div key={activity.id} className="flex items-center justify-between p-3 border-l-4 border-indigo-500 bg-gray-50">
+                <div>
+                  <h3 className="font-medium text-gray-800">{activity.title}</h3>
+                  <p className="text-sm text-gray-600">
+                    {new Date(activity.completedAt).toLocaleString('ja-JP')}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-bold text-indigo-600">+{activity.points}</div>
+                  <div className="text-xs text-gray-500">ポイント</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
