@@ -1,5 +1,5 @@
-// API型定義
-export interface TodayTask {
+// 基本タスク型定義
+export interface Task {
   id: string
   category: string
   title: string
@@ -7,7 +7,11 @@ export interface TodayTask {
   estimated_seconds: number
   difficulty: 'easy' | 'medium' | 'hard'
   content?: string
+  source?: string
 }
+
+// API互換のためのエイリアス
+export type TodayTask = Task
 
 export interface TodayResponse {
   user_id: string
@@ -124,9 +128,14 @@ export interface ApiError {
   status: number
 }
 
-// フロントエンド用型定義
-export interface Task extends TodayTask {
-  // フロントエンドで使用する追加プロパティ
+// レガシー API レスポンス用の型定義 (下位互換)
+export interface LegacyTask {
+  id: string
+  category: string
+  title: string
+  description: string
+  estimatedTime: number
+  source: string
 }
 
 // フォールバック用モックデータ

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo, useMemo, useCallback } from 'react'
 import { Task } from '@/types'
 
 interface TaskCardProps {
@@ -9,40 +9,40 @@ interface TaskCardProps {
   onComplete: (taskId: string, duration: number, result: any) => void
 }
 
-export function TaskCard({ task, onSelect, onComplete }: TaskCardProps) {
+function TaskCardComponent({ task, onSelect, onComplete }: TaskCardProps) {
   const [isExecuting, setIsExecuting] = useState(false)
   const [timeLeft, setTimeLeft] = useState(task.estimated_seconds || 60)
 
-  const categoryColors = {
+  const categoryColors = useMemo(() => ({
     '学習': 'bg-blue-500',
-    '仕事': 'bg-green-500', 
+    '仕事': 'bg-green-500',
     '生活': 'bg-orange-500',
     '健康': 'bg-red-500'
-  }
+  }), [])
 
-  const categoryIcons = {
+  const categoryIcons = useMemo(() => ({
     '学習': '📚',
     '仕事': '💼',
     '生活': '🏠',
     '健康': '💪'
-  }
+  }), [])
 
-  const handleStart = () => {
+  const handleStart = useCallback(() => {
     setIsExecuting(true)
     setTimeLeft(task.estimated_seconds || 60)
     onSelect(task)
-  }
+  }, [task, onSelect])
 
-  const handleComplete = () => {
+  const handleComplete = useCallback(() => {
     const actualDuration = (task.estimated_seconds || 60) - timeLeft
     onComplete(task.id, actualDuration, { completed: true, confidence: 'high' })
     setIsExecuting(false)
-  }
+  }, [task.id, task.estimated_seconds, timeLeft, onComplete])
 
-  const handleSkip = () => {
+  const handleSkip = useCallback(() => {
     onComplete(task.id, 0, { completed: false, reason: 'skipped' })
     setIsExecuting(false)
-  }
+  }, [task.id, onComplete])
 
   // タイマー処理
   useEffect(() => {
@@ -58,7 +58,18 @@ export function TaskCard({ task, onSelect, onComplete }: TaskCardProps) {
       }, 1000)
       return () => clearInterval(timer)
     }
-  }, [isExecuting, timeLeft])
+  }, [isExecuting, timeLeft, handleComplete])
+
+  const progressPercentage = useMemo(() => {
+    const estimated = task.estimated_seconds || 60
+    return ((estimated - timeLeft) / estimated) * 100
+  }, [task.estimated_seconds, timeLeft])
+
+  const formattedTime = useMemo(() => {
+    const minutes = Math.floor(timeLeft / 60)
+    const seconds = timeLeft % 60
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`
+  }, [timeLeft])
 
   return (
     <div className={`bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-md ${
@@ -94,14 +105,12 @@ export function TaskCard({ task, onSelect, onComplete }: TaskCardProps) {
             {/* タイマー */}
             <div className="text-center">
               <div className="text-3xl font-bold text-blue-600 mb-2">
-                {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                {formattedTime}
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
+                <div
                   className="bg-blue-500 h-2 rounded-full transition-all duration-1000"
-                  style={{ 
-                    width: `${((task.estimated_seconds || 60) - timeLeft) / (task.estimated_seconds || 60) * 100}%` 
-                  }}
+                  style={{ width: `${progressPercentage}%` }}
                 ></div>
               </div>
             </div>
@@ -144,3 +153,5 @@ export function TaskCard({ task, onSelect, onComplete }: TaskCardProps) {
     </div>
   )
 }
+
+export const TaskCard = memo(TaskCardComponent)
